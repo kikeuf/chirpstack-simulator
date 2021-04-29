@@ -1,6 +1,6 @@
 package main
 
-import "github.com/kikeuf/chirpstack-simulator/cmd/chirpstack-simulator/cmd"
+import "github.com/kikeuf/chirpstack-simulator-2/cmd/chirpstack-simulator/cmd"
 
 var version string // set by the compiler
 
