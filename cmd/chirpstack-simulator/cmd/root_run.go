@@ -13,10 +13,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/brocaar/chirpstack-simulator/internal/as"
-	"github.com/brocaar/chirpstack-simulator/internal/config"
-	"github.com/brocaar/chirpstack-simulator/internal/ns"
-	"github.com/brocaar/chirpstack-simulator/internal/simulator"
+	"github.com/kikeuf/lorawan/internal/as"
+	"github.com/kikeuf/lorawan/internal/config"
+	"github.com/kikeuf/lorawan/internal/ns"
+	"github.com/kikeuf/lorawan/internal/simulator"
 )
 
 func run(cnd *cobra.Command, args []string) error {
