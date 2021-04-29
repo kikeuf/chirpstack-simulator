@@ -1,4 +1,4 @@
-module github.com/kikeuf/lorawan
+module github.com/kikeuf/chirpstack-simulator-2
 
 go 1.13
 
