@@ -8,7 +8,7 @@ import (
 
 	"github.com/brocaar/chirpstack-api/go/v3/common"
 	"github.com/brocaar/chirpstack-api/go/v3/gw"
-	"github.com/brocaar/chirpstack-simulator/simulator"
+	"github.com/kikeuf/lorawan/simulator"
 	"github.com/brocaar/lorawan"
 	log "github.com/sirupsen/logrus"
 )
