@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/kikeuf/lorawan/internal/config"
+	"github.com/kikeuf/chirpstack-simulator-2/internal/config"
 )
 
 const configTemplate = `[general]
