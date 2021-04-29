@@ -178,6 +178,9 @@ func (s *simulation) runSimulation() error {
 	var gateways []*simulator.Gateway
 	var devices []*simulator.Device
 
+	fmt.Printf("Hello world")
+	fmt.Printf("ActivationTime: %v\n", s.activationTime.String())
+	
 	for _, gatewayID := range s.gatewayIDs {
 		gw, err := simulator.NewGateway(
 			simulator.WithGatewayID(gatewayID),
