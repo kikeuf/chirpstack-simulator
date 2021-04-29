@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/brocaar/chirpstack-simulator/internal/config"
+	"github.com/kikeuf/lorawan/internal/config"
 )
 
 var mqttClient mqtt.Client
