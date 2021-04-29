@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	"github.com/kikeuf/lorawan/internal/config"
+	"github.com/kikeuf/chirpstack-simulator-2/internal/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
