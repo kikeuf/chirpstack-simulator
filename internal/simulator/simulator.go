@@ -20,10 +20,10 @@ import (
 	"github.com/brocaar/chirpstack-api/go/v3/as/external/api"
 	"github.com/brocaar/chirpstack-api/go/v3/common"
 	"github.com/brocaar/chirpstack-api/go/v3/gw"
-	"github.com/brocaar/chirpstack-simulator/internal/as"
-	"github.com/brocaar/chirpstack-simulator/internal/config"
-	"github.com/brocaar/chirpstack-simulator/internal/ns"
-	"github.com/brocaar/chirpstack-simulator/simulator"
+	"github.com/kikeuf/lorawan/internal/as"
+	"github.com/kikeuf/lorawan/internal/config"
+	"github.com/kikeuf/lorawan/internal/ns"
+	"github.com/kikeuf/lorawan/simulator"
 	"github.com/brocaar/lorawan"
 )
 
