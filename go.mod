@@ -1,4 +1,4 @@
-module github.com/kikeuf/chirpstack-simulator-2
+module github.com/kikeuf/chirpstack-simulator
 
 go 1.13
 

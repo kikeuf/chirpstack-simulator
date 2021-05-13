@@ -1,3 +1,4 @@
+
 package simulator
 
 import (
@@ -11,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofrs/uuid"
@@ -20,89 +22,146 @@ import (
 	"github.com/brocaar/chirpstack-api/go/v3/as/external/api"
 	"github.com/brocaar/chirpstack-api/go/v3/common"
 	"github.com/brocaar/chirpstack-api/go/v3/gw"
-	"github.com/kikeuf/chirpstack-simulator-2/internal/as"
-	"github.com/kikeuf/chirpstack-simulator-2/internal/config"
-	"github.com/kikeuf/chirpstack-simulator-2/internal/ns"
-	"github.com/kikeuf/chirpstack-simulator-2/simulator"
+	"github.com/kikeuf/chirpstack-simulator/internal/as"
+	"github.com/kikeuf/chirpstack-simulator/internal/config"
+	"github.com/kikeuf/chirpstack-simulator/internal/ns"
+	"github.com/kikeuf/chirpstack-simulator/simulator"
 	"github.com/brocaar/lorawan"
 )
 
 // Start starts the simulator.
 func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
+		
 	for i, c := range c.Simulator {
 		log.WithFields(log.Fields{
 			"i": i,
 		}).Info("simulator: starting simulation")
 
+		
 		wg.Add(1)
+		
+		appID := 0
+
 
 		spID, err := uuid.FromString(c.ServiceProfileID)
 		if err != nil {
 			return errors.Wrap(err, "uuid from string error")
 		}
 
-		pl, err := hex.DecodeString(c.Device.Payload)
-		if err != nil {
-			return errors.Wrap(err, "decode payload error")
+						
+		var sdevs []simdevice
+
+		for _, cd := range c.Device {
+
+			pl, err := hex.DecodeString(cd.Payload)
+			if err != nil {
+				return errors.Wrap(err, "decode payload error")
+			}
+			
+			var gws []string
+			gws = strings.Split(cd.Gateways, ",")
+			for id,g := range gws {
+				gws[id]=strings.TrimSpace(g)
+			}
+
+			if cd.Count < 1 { cd.Count = 1}
+
+			sdev := simdevice {
+				prefix :	      cd.Prefix,				
+				deviceCount:          cd.Count,				
+				uplinkInterval:       cd.UplinkInterval,
+				fPort:                cd.FPort,
+				payload:              pl,
+				frequency:            cd.Frequency,
+				bandwidth:            cd.Bandwidth / 1000,
+				spreadingFactor:      cd.SpreadingFactor,
+				AppKeys:	      make(map[lorawan.EUI64]lorawan.AES128Key),
+				gateways :	      gws,
+				}
+			sdevs = append(sdevs, sdev)
+
+		}
+
+		var sgws []simgateway
+		for _, cg := range c.Gateway {
+
+			if cg.Count < 1 { cg.Count = 1} 
+			
+			sgw := simgateway {
+			    groupId :		  cg.ID,
+			    gatewayCount : 	  cg.Count,
+			    prefix :		  cg.Prefix,  
+			    eventTopicTemplate:   cg.EventTopicTemplate,
+			    commandTopicTemplate: cg.CommandTopicTemplate,
+			}
+		   sgws = append(sgws, sgw)
 		}
 
 		sim := simulation{
+			prefix : 	      c.Prefix,			
 			ctx:                  ctx,
 			wg:                   wg,
 			serviceProfileID:     spID,
-			deviceCount:          c.Device.Count,
 			activationTime:       c.ActivationTime,
-			uplinkInterval:       c.Device.UplinkInterval,
-			fPort:                c.Device.FPort,
-			payload:              pl,
-			frequency:            c.Device.Frequency,
-			bandwidth:            c.Device.Bandwidth / 1000,
-			spreadingFactor:      c.Device.SpreadingFactor,
+			devices:	      sdevs,
+			gateways:	      sgws,
 			duration:             c.Duration,
-			gatewayMinCount:      c.Gateway.MinCount,
-			gatewayMaxCount:      c.Gateway.MaxCount,
 			deviceAppKeys:        make(map[lorawan.EUI64]lorawan.AES128Key),
-			eventTopicTemplate:   c.Gateway.EventTopicTemplate,
-			commandTopicTemplate: c.Gateway.CommandTopicTemplate,
+                        applicationID:        int64(appID),    
 		}
 
 		go sim.start()
+		
 	}
 
 	return nil
 }
 
 type simulation struct {
+	prefix		 string	
 	ctx              context.Context
 	wg               *sync.WaitGroup
 	serviceProfileID uuid.UUID
-	deviceCount      int
-	gatewayMinCount  int
-	gatewayMaxCount  int
 	duration         time.Duration
+	activationTime   time.Duration
 
-	fPort           uint8
-	payload         []byte
-	activationTime  time.Duration
-	uplinkInterval  time.Duration
-	frequency       int
-	bandwidth       int
-	spreadingFactor int
+	devices		[]simdevice	
+	gateways	[]simgateway
 
 	serviceProfile       *api.ServiceProfile
 	deviceProfileID      uuid.UUID
 	applicationID        int64
 	gatewayIDs           []lorawan.EUI64
 	deviceAppKeys        map[lorawan.EUI64]lorawan.AES128Key
+}
+
+type simdevice struct {
+	prefix		string
+	deviceCount     int
+	fPort           uint8
+	payload         []byte
+	uplinkInterval  time.Duration
+	frequency       int
+	bandwidth       int
+	spreadingFactor int
+	AppKeys		map[lorawan.EUI64]lorawan.AES128Key
+	gateways	[]string
+
+}
+
+type simgateway struct {
+	groupId		string
+	gatewayCount	int	
+	prefix		string
 	eventTopicTemplate   string
 	commandTopicTemplate string
+	gatewayIDs           []lorawan.EUI64
 }
 
 func (s *simulation) start() {
 	if err := s.init(); err != nil {
 		log.WithError(err).Error("simulator: init simulation error")
 	}
-
 	if err := s.runSimulation(); err != nil {
 		log.WithError(err).Error("simulator: simulation error")
 	}
@@ -177,23 +236,27 @@ func (s *simulation) tearDown() error {
 func (s *simulation) runSimulation() error {
 	var gateways []*simulator.Gateway
 	var devices []*simulator.Device
+	var gateway_groupids []string
 
-	fmt.Printf("Hello world")
-	fmt.Printf("ActivationTime: %v\n", s.activationTime.String())
-	
-	for _, gatewayID := range s.gatewayIDs {
+	//Create all gateways for this simulation
+	for _, g := range s.gateways {	
+
+	    for _, gatewayID := range g.gatewayIDs {
 		gw, err := simulator.NewGateway(
 			simulator.WithGatewayID(gatewayID),
 			simulator.WithMQTTClient(ns.Client()),
-			simulator.WithEventTopicTemplate(s.eventTopicTemplate),
-			simulator.WithCommandTopicTemplate(s.commandTopicTemplate),
+			simulator.WithEventTopicTemplate(g.eventTopicTemplate),
+			simulator.WithCommandTopicTemplate(g.commandTopicTemplate),
 		)
 		if err != nil {
 			return errors.Wrap(err, "new gateway error")
 		}
 		gateways = append(gateways, gw)
+		gateway_groupids = append(gateway_groupids,g.groupId)
+	   }	
 	}
 
+	//Wait before performing simulation
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(s.ctx)
 	if s.duration != 0 {
@@ -201,46 +264,49 @@ func (s *simulation) runSimulation() error {
 	}
 	defer cancel()
 
-	for devEUI, appKey := range s.deviceAppKeys {
-		devGateways := make(map[int]*simulator.Gateway)
-		devNumGateways := s.gatewayMinCount + mrand.Intn(s.gatewayMaxCount-s.gatewayMinCount+1)
+	for _, sdev := range s.devices {
 
-		for len(devGateways) < devNumGateways {
-			// pick random gateway index
-			n := mrand.Intn(len(gateways))
-			devGateways[n] = gateways[n]
-		}
-
+		//Create a group of gateways used by all devices of this group
 		var gws []*simulator.Gateway
-		for k := range devGateways {
-			gws = append(gws, devGateways[k])
+		for k := range gateways {
+		    for _, gid := range sdev.gateways {
+			if gid == gateway_groupids[k] {
+				gws = append(gws, gateways[k])
+			}
+		   }
 		}
 
-		d, err := simulator.NewDevice(ctx, &wg,
-			simulator.WithDevEUI(devEUI),
-			simulator.WithAppKey(appKey),
-			simulator.WithUplinkInterval(s.uplinkInterval),
-			simulator.WithOTAADelay(time.Duration(mrand.Int63n(int64(s.activationTime)))),
-			simulator.WithUplinkPayload(false, s.fPort, s.payload),
-			simulator.WithGateways(gws),
-			simulator.WithUplinkTXInfo(gw.UplinkTXInfo{
-				Frequency:  uint32(s.frequency),
-				Modulation: common.Modulation_LORA,
-				ModulationInfo: &gw.UplinkTXInfo_LoraModulationInfo{
-					LoraModulationInfo: &gw.LoRaModulationInfo{
-						Bandwidth:       uint32(s.bandwidth),
-						SpreadingFactor: uint32(s.spreadingFactor),
-						CodeRate:        "3/4",
+
+		for devEUI, appKey := range sdev.AppKeys {
+
+			d, err := simulator.NewDevice(ctx, &wg,
+				simulator.WithDevEUI(devEUI),
+				simulator.WithAppKey(appKey),
+				simulator.WithUplinkInterval(sdev.uplinkInterval),
+				simulator.WithOTAADelay(time.Duration(mrand.Int63n(int64(s.activationTime)))),
+				simulator.WithUplinkPayload(false, sdev.fPort, sdev.payload),
+				simulator.WithGateways(gws),
+				simulator.WithUplinkTXInfo(gw.UplinkTXInfo{
+					Frequency:  uint32(sdev.frequency),
+					Modulation: common.Modulation_LORA,
+					ModulationInfo: &gw.UplinkTXInfo_LoraModulationInfo{
+						LoraModulationInfo: &gw.LoRaModulationInfo{
+							Bandwidth:       uint32(sdev.bandwidth),
+							SpreadingFactor: uint32(sdev.spreadingFactor),
+							CodeRate:        "3/4",
+						},
 					},
-				},
-			}),
-		)
-		if err != nil {
-			return errors.Wrap(err, "new device error")
-		}
+				}),
+			)
+			if err != nil {
+				return errors.Wrap(err, "new device error")
+			}
 
-		devices = append(devices, d)
+			devices = append(devices, d)
+
+		}
 	}
+
 
 	go func() {
 		sigChan := make(chan os.Signal)
@@ -277,7 +343,9 @@ func (s *simulation) setupServiceProfile() error {
 func (s *simulation) setupGateways() error {
 	log.Info("simulator: creating gateways")
 
-	for i := 0; i < s.gatewayMaxCount; i++ {
+    for k, g := range s.gateways {
+
+	for i := 0; i < g.gatewayCount; i++ {
 		var gatewayID lorawan.EUI64
 		if _, err := rand.Read(gatewayID[:]); err != nil {
 			return errors.Wrap(err, "read random bytes error")
@@ -286,8 +354,8 @@ func (s *simulation) setupGateways() error {
 		_, err := as.Gateway().Create(context.Background(), &api.CreateGatewayRequest{
 			Gateway: &api.Gateway{
 				Id:              gatewayID.String(),
-				Name:            gatewayID.String(),
-				Description:     gatewayID.String(),
+				Name:            g.prefix + gatewayID.String(),
+				Description:     g.prefix + gatewayID.String(),
 				OrganizationId:  s.serviceProfile.OrganizationId,
 				NetworkServerId: s.serviceProfile.NetworkServerId,
 				Location:        &common.Location{},
@@ -296,8 +364,12 @@ func (s *simulation) setupGateways() error {
 		if err != nil {
 			return errors.Wrap(err, "create gateway error")
 		}
-
+		
 		s.gatewayIDs = append(s.gatewayIDs, gatewayID)
+		//g.gatewayIDs = append(g.gatewayIDs, gatewayID)
+		s.gateways[k].gatewayIDs = append(s.gateways[k].gatewayIDs, gatewayID)
+
+	    }
 	}
 
 	return nil
@@ -362,26 +434,31 @@ func (s *simulation) tearDownDeviceProfile() error {
 func (s *simulation) setupApplication() error {
 	log.Info("simulator: init application")
 
-	appName, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
+	if s.applicationID == 0 {
+		
+		appName, err := uuid.NewV4()
+		if err != nil {
+			return err
+		}
+		createAppResp, err := as.Application().Create(context.Background(), &api.CreateApplicationRequest{
+			Application: &api.Application{
+				Name:             s.prefix + appName.String(),
+				Description:      s.prefix + appName.String(),
+				OrganizationId:   s.serviceProfile.OrganizationId,
+				ServiceProfileId: s.serviceProfile.Id,
+			},
+		})
+			//log.Info("simulator: init application - after create")
 
-	createAppResp, err := as.Application().Create(context.Background(), &api.CreateApplicationRequest{
-		Application: &api.Application{
-			Name:             appName.String(),
-			Description:      appName.String(),
-			OrganizationId:   s.serviceProfile.OrganizationId,
-			ServiceProfileId: s.serviceProfile.Id,
-		},
-	})
-	if err != nil {
-		return errors.Wrap(err, "create applicaiton error")
-	}
+		if err != nil {
+			return errors.Wrap(err, "create application error")
+		}
 
-	s.applicationID = createAppResp.Id
+		s.applicationID = createAppResp.Id
+	}
 	return nil
 }
+
 
 func (s *simulation) tearDownApplication() error {
 	log.Info("simulator: tear-down application")
@@ -395,10 +472,20 @@ func (s *simulation) tearDownApplication() error {
 	return nil
 }
 
+/*
+func (s *simulation) setupDevicesGroup() error {
+	log.Info("simulator: init devices group")
+
+	
+}
+*/
+
 func (s *simulation) setupDevices() error {
 	log.Info("simulator: init devices")
 
-	for i := 0; i < s.deviceCount; i++ {
+    for _, d := range s.devices {
+
+	for i := 0; i < d.deviceCount; i++ {
 		var devEUI lorawan.EUI64
 		var appKey lorawan.AES128Key
 
@@ -412,8 +499,8 @@ func (s *simulation) setupDevices() error {
 		_, err := as.Device().Create(context.Background(), &api.CreateDeviceRequest{
 			Device: &api.Device{
 				DevEui:          devEUI.String(),
-				Name:            devEUI.String(),
-				Description:     devEUI.String(),
+				Name:            d.prefix + devEUI.String(),
+				Description:     d.prefix + devEUI.String(),
 				ApplicationId:   s.applicationID,
 				DeviceProfileId: s.deviceProfileID.String(),
 			},
@@ -436,7 +523,9 @@ func (s *simulation) setupDevices() error {
 		}
 
 		s.deviceAppKeys[devEUI] = appKey
+		d.AppKeys[devEUI] = appKey
 	}
+    }
 
 	return nil
 }

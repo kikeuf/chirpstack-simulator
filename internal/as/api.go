@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/brocaar/chirpstack-api/go/v3/as/external/api"
-	"github.com/kikeuf/chirpstack-simulator-2/internal/config"
+	"github.com/kikeuf/chirpstack-simulator/internal/config"
 )
 
 var clientConn *grpc.ClientConn

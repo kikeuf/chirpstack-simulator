@@ -42,11 +42,13 @@ type Config struct {
 	} `mapstructure:"network_server"`
 
 	Simulator []struct {
+		Prefix		 string        `mapstructure:"prefix"`
 		ServiceProfileID string        `mapstructure:"service_profile_id"`
 		Duration         time.Duration `mapstructure:"duration"`
 		ActivationTime   time.Duration `mapstructure:"activation_time"`
 
-		Device struct {
+		Device[] struct {
+			Prefix		string	      `mapstructure:"prefix"`	
 			Count           int           `mapstructure:"count"`
 			UplinkInterval  time.Duration `mapstructure:"uplink_interval"`
 			FPort           uint8         `mapstructure:"f_port"`
@@ -54,11 +56,14 @@ type Config struct {
 			Frequency       int           `mapstructure:"frequency"`
 			Bandwidth       int           `mapstructure:"bandwidth"`
 			SpreadingFactor int           `mapstructure:"spreading_factor"`
+			Gateways	string        `mapstructure:"gateways"`
+
 		} `mapstructure:"device"`
 
-		Gateway struct {
-			MinCount             int    `mapstructure:"min_count"`
-			MaxCount             int    `mapstructure:"max_count"`
+		Gateway[] struct {
+			ID		     string `mapstructure:"group_id"`	
+			Prefix		     string `mapstructure:"prefix"`							
+			Count		     int    `mapstructure:"count"`			
 			EventTopicTemplate   string `mapstructure:"event_topic_template"`
 			CommandTopicTemplate string `mapstructure:"command_topic_template"`
 		} `mapstructure:"gateway"`
