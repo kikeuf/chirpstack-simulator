@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/kikeuf/chirpstack-simulator-2/internal/config"
+	"github.com/kikeuf/chirpstack-simulator/internal/config"
 )
 
 const configTemplate = `[general]
@@ -85,10 +85,13 @@ log_level={{ .General.LogLevel }}
   password="{{ .NetworkServer.Gateway.Backend.MQTT.Password }}"
 
 
-# Simulator configuration.
-#
-# Example:
+# Simulator configuration (this section can be replicated)
 # [[simulator]]
+#
+# # Prefix.
+# #
+# # Prefix for this simulation name (facultative)
+# prefix="simulation1_"
 #
 # # Service-profile ID.
 # #
@@ -108,14 +111,17 @@ log_level={{ .General.LogLevel }}
 # # value must be less than the simulator duration.
 # activation_time="1m"
 #
-#   # Device configuration.
-#   [simulator.device]
+#   # Device configuration (this section can be replicated)
+#   [[simulator.device]]
+#
+#   # Prefix for this devices group name (facultative)
+#   prefix="devicegroup1_"
 #
 #   # Number of devices to simulate.
 #   count=1000
 #
 #   # Uplink interval.
-#   uplink_interval="5m"
+#   uplink_interval="1m"
 #
 #   # FPort.
 #   f_port=10
@@ -132,27 +138,36 @@ log_level={{ .General.LogLevel }}
 #   # Spreading-factor.
 #   spreading_factor=7
 #
-#   # Gateway configuration.
-#   [simulator.gateway]
+#   # Ids of group of gateways connected with all devices of this group, Ids separated by commas
+#   gateways="1,2"
+#
+#   # Gateway configuration (this section can be replicated)
+#   [[simulator.gateway]]
+#
+#   " id of the group of gateways, id to add in 'gateways' fields under [simulator.device] section
+#   group_id="1"
+#
+#   # Prefix for this devices group name (facultative)
+#   prefix="gatewaygroup1_"
+#
+#   # number of receiving gateways.
+#   count=3
 #
 #   # Event topic template.
 #   event_topic_template="{{ "gateway/{{ .GatewayID }}/event/{{ .Event }}" }}"
 #
 #   # Command topic template.
 #   command_topic_template="{{ "gateway/{{ .GatewayID }}/command/{{ .Command }}" }}"
-#
-#   # Min number of receiving gateways.
-#   min_count=3
-#
-#   # Max number of receiving gateways.
-#   max_count=5
+
 {{ range $index, $element := .Simulator }}
 [[simulator]]
+prefix="{{ $element.Prefix }}"
 service_profile_id="{{ $element.ServiceProfileID }}"
 duration="{{ $element.Duration }}"
 activation_time="{{ $element.ActivationTime }}"
 
-  [simulator.device]
+  [[simulator.device]]
+  prefix="{{ $element.Device.Prefix }}"
   count={{ $element.Device.Count }}
   uplink_interval="{{ $element.Device.UplinkInterval }}"
   f_port="{{ $element.Device.FPort }}"
@@ -160,10 +175,12 @@ activation_time="{{ $element.ActivationTime }}"
   frequency={{ $element.Device.Frequency }}
   bandwidth={{ $element.Device.Bandwidth }}
   spreading_factor={{ $element.Device.SpreadingFactor }}
+  gateways="{{ $element.Device.Gateways }}"
 
-  [simulator.gateway]
-  min_count={{ $element.Gateway.MinCount }}
-  max_count={{ $element.Gateway.MaxCount }}
+  [[simulator.gateway]]
+  groupid"{{ $element.Gateway.GroupId }}"
+  prefix"{{ $element.Gateway.Prefix }}"
+  count={{ $element.Gateway.Count }}
   event_topic_template="{{ $element.Gateway.EventTopicTemplate }}"
   command_topic_template="{{ $element.Gateway.CommandTopicTemplate }}"
 {{ end }}

@@ -104,8 +104,12 @@ log_level=4
   password=""
 
 
-# Simulator configuration.
+# Simulator configuration (can be replicated to run simultaneous simulators)
 [[simulator]]
+# Prefix.
+# 
+# Prefix for this simulation name (facultative)
+prefix="simulation1_"
 
 # Service-profile ID.
 #
@@ -125,10 +129,13 @@ duration="5m"
 # value must be less than the simulator duration.
 activation_time="1m"
 
-  # Device configuration.
-  [simulator.device]
+  # Device configuration (can be replicated to simulate more devices with other parameters)
+  [[simulator.device]]
 
-  # Number of devices to simulate.
+  # Prefix of the name of the device
+  prefix="device1_"
+
+  # Number of devices to simulate (the device can be cloned with exactly same parameters as many times you specify here)
   count=1000
 
   # Uplink interval.
@@ -149,14 +156,17 @@ activation_time="1m"
   # Spreading-factor.
   spreading_factor=7
 
-  # Gateway configuration.
+  # List of Ids of gateways connected with this device (and his clones), Ids have to be separated by commas
+  gateways="1"
+
+  # Gateway configuration (can be replicated to simulate more gateways with other parameters)
   [simulator.gateway]
 
-  # Min number of receiving gateways.
-  min_count=3
+  # unique id of the gateway to be used in 'gateways' fields under [simulator.device] section
+  group_id=3
 
-  # Max number of receiving gateways.
-  max_count=5
+  # number of receiving gateways (the gateway can be cloned with exactly same parameters as many times you specify here)
+  count=3
 
   # Event topic template.
   event_topic_template="gateway/{{ .GatewayID }}/event/{{ .Event }}"
@@ -216,4 +226,4 @@ The ChirpStack Simulator provides various metrics that can be collected using
 ## License
 
 ChirpStack Simulator is distributed under the MIT license. See also
-[LICENSE](https://github.com/brocaar/chirpstack-simulator/blob/master/LICENSE).
+[LICENSE](https://github.com/kikeuf/chirpstack-simulator/blob/master/LICENSE).
