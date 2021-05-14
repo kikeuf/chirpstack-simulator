@@ -129,10 +129,10 @@ duration="5m"
 # value must be less than the simulator duration.
 activation_time="1m"
 
-  # Device configuration (can be replicated to simulate more devices with other parameters)
+  # Device configuration (this section can be replicated to simulate more devices with other parameters)
   [[simulator.device]]
 
-  # Prefix of the name of the device
+  # Prefix of the device name
   prefix="device1_"
 
   # Number of devices to simulate (the device can be cloned with exactly same parameters as many times you specify here)
@@ -147,6 +147,9 @@ activation_time="1m"
   # Payload (HEX encoded).
   payload="010203"
 
+  # StrPayload (String) [used only if 'payload' value is empty or not set otherwise this parameter is ignored]
+  strpayload="text"
+
   # Frequency (Hz).
   frequency=868100000
 
@@ -159,11 +162,11 @@ activation_time="1m"
   # List of Ids of gateways connected with this device (and his clones), Ids have to be separated by commas
   gateways="1"
 
-  # Gateway configuration (can be replicated to simulate more gateways with other parameters)
-  [simulator.gateway]
+  # Gateway configuration (this section can be replicated to simulate more gateways with other parameters)
+  [[simulator.gateway]]
 
   # unique id of the gateway to be used in 'gateways' fields under [simulator.device] section
-  group_id=3
+  group_id="1"
 
   # number of receiving gateways (the gateway can be cloned with exactly same parameters as many times you specify here)
   count=3

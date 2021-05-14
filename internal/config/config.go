@@ -52,6 +52,7 @@ type Config struct {
 			Count           int           `mapstructure:"count"`
 			UplinkInterval  time.Duration `mapstructure:"uplink_interval"`
 			FPort           uint8         `mapstructure:"f_port"`
+			StrPayload      string        `mapstructure:"strpayload"`
 			Payload         string        `mapstructure:"payload"`
 			Frequency       int           `mapstructure:"frequency"`
 			Bandwidth       int           `mapstructure:"bandwidth"`

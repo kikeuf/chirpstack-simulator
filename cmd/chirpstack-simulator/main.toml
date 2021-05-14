@@ -130,7 +130,7 @@ activation_time="5s"
 
 [[simulator.device]]
 #
-#   # Prefix for each device name in this group (facultative)
+#   # Prefix for each device name in this group [facultative]
    prefix="devicegroup2_"
 
 #   # Number of devices to simulate.
@@ -142,8 +142,8 @@ activation_time="5s"
 #   # FPort.
    f_port=10
 #
-#   # Payload (HEX encoded).
-   payload="212121"
+#   # Payload (String) [used only if 'payload' value is empty or not set otherwise it is ignored]
+   strpayload="Let it be"
 #
 #   # Frequency (Hz).
    frequency=868100000

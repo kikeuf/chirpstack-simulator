@@ -111,13 +111,13 @@ log_level={{ .General.LogLevel }}
 # # value must be less than the simulator duration.
 # activation_time="1m"
 #
-#   # Device configuration (this section can be replicated)
+#   # Device configuration (this section can be replicated to simulate more devices with other parameters)
 #   [[simulator.device]]
 #
-#   # Prefix for this devices group name (facultative)
+#   # Prefix for this device name (facultative)
 #   prefix="devicegroup1_"
 #
-#   # Number of devices to simulate.
+#   # Number of devices to simulate (the device can be cloned with exactly same parameters as many times you specify here)
 #   count=1000
 #
 #   # Uplink interval.
@@ -128,6 +128,9 @@ log_level={{ .General.LogLevel }}
 #
 #   # Payload (HEX encoded).
 #   payload="010203"
+#
+#   # StrPayload (String) [used only if 'payload' value is empty or not set otherwise this parameter is ignored]
+#   strpayload="text"
 #
 #   # Frequency (Hz).
 #   frequency=868100000
@@ -141,16 +144,16 @@ log_level={{ .General.LogLevel }}
 #   # Ids of group of gateways connected with all devices of this group, Ids separated by commas
 #   gateways="1,2"
 #
-#   # Gateway configuration (this section can be replicated)
+#   # Gateway configuration (this section can be replicated to simulate more gateways with other parameters)
 #   [[simulator.gateway]]
 #
-#   " id of the group of gateways, id to add in 'gateways' fields under [simulator.device] section
+#   # id of the group of gateways, id to add in 'gateways' fields under [simulator.device] section
 #   group_id="1"
 #
 #   # Prefix for this devices group name (facultative)
 #   prefix="gatewaygroup1_"
 #
-#   # number of receiving gateways.
+#   # number of receiving gateways (the gateway can be cloned with exactly same parameters as many times you specify here)
 #   count=3
 #
 #   # Event topic template.

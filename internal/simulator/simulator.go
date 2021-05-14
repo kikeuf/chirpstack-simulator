@@ -53,6 +53,11 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 
 		for _, cd := range c.Device {
 
+			
+			if len(cd.Payload)==0 {
+				cd.Payload = hex.EncodeToString([]byte(cd.StrPayload))
+			}
+
 			pl, err := hex.DecodeString(cd.Payload)
 			if err != nil {
 				return errors.Wrap(err, "decode payload error")
@@ -140,6 +145,7 @@ type simdevice struct {
 	deviceCount     int
 	fPort           uint8
 	payload         []byte
+	strpayload	string
 	uplinkInterval  time.Duration
 	frequency       int
 	bandwidth       int
