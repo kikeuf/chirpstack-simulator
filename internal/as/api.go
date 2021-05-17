@@ -13,6 +13,8 @@ import (
 
 	"github.com/brocaar/chirpstack-api/go/v3/as/external/api"
 	"github.com/kikeuf/chirpstack-simulator/internal/config"
+	"github.com/kikeuf/chirpstack-simulator/internal/iapi"
+	
 )
 
 var clientConn *grpc.ClientConn
@@ -34,7 +36,13 @@ func (j *jwtCredentials) RequireTransportSecurity() bool {
 
 // Setup configures the AS API client.
 func Setup(c config.Config) error {
+	
 	conf := c.ApplicationServer
+
+	token := iapi.GetToken(conf.API.Server,conf.API.User,conf.API.Password)
+	if len(token)!=0 {
+		conf.API.JWTToken = token
+	}
 
 	// connect gRPC
 	log.WithFields(log.Fields{

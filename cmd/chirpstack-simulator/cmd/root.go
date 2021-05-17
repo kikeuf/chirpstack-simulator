@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 	Short: "ChirpStack Simulator",
 	Long: `ChirpStack Simulator simulates device uplinks
 	> documentation & support: https://www.chirpstack.io/
-	> source & copyright information: https://github.com/brocaar/chirpstack-simulator/`,
+	> source & copyright information: https://github.com/kikeuf/chirpstack-simulator/`,
 	RunE: run,
 }
 

@@ -54,8 +54,17 @@ log_level=4
   # token can be generated using the login API endpoint. In the near-future
   # it will be possible to generate these tokens within the web-interface:
   # https://github.com/brocaar/chirpstack-application-server/pull/421
+  # A token is valid only for 48 hours and need to be refreshed
   jwt_token="PUT_YOUR_JWT_TOKEN_HERE"
 
+  
+  # Credentials to use for http requests on chirpstack api
+  # Chirpstack-simulator will try to retrieve the jwt_token by this way to avoid manual refresh
+  # if it doesn't manage the jwt_token specified above will be used instead 
+  username="PUT_USERNAME_TO_CONNECT_TO_API"
+  password="PUT_PASSWORD_TO_CONNECT_TO_API"
+
+ 
   # Server.
   #
   # This must point to the external API server of the ChirpStack Application
@@ -106,9 +115,17 @@ log_level=4
 
 # Simulator configuration (can be replicated to run simultaneous simulators)
 [[simulator]]
-# Prefix.
+
+# # Application ID (facultative)
+#
+# # Set the application ID to use for this simulation
+# # If not specified a new dedicated application will be created
+application_id=PUT_YOUR_APPLICATION_ID_HERE
+
+# Prefix (facultative)
 # 
-# Prefix for this simulation name (facultative)
+# Prefix for this simulation name
+# # This parameter will be ignored if application_id is specified
 prefix="simulation1_"
 
 # Service-profile ID.
@@ -129,13 +146,15 @@ duration="5m"
 # value must be less than the simulator duration.
 activation_time="1m"
 
-  # Device configuration (this section can be replicated to simulate more devices with other parameters)
+  # Device configuration 
+  # This section can be replicated to simulate more devices with other parameters
   [[simulator.device]]
 
   # Prefix of the device name
   prefix="device1_"
 
-  # Number of devices to simulate (the device can be cloned with exactly same parameters as many times you specify here)
+  # Number of devices to simulate 
+  # The device can be cloned with exactly same parameters as many times you specify here
   count=1000
 
   # Uplink interval.
@@ -147,7 +166,8 @@ activation_time="1m"
   # Payload (HEX encoded).
   payload="010203"
 
-  # StrPayload (String) [used only if 'payload' value is empty or not set otherwise this parameter is ignored]
+  # StrPayload (String) 
+  # Used only if 'payload' value is empty or not set otherwise this parameter is ignored
   strpayload="text"
 
   # Frequency (Hz).
@@ -159,16 +179,19 @@ activation_time="1m"
   # Spreading-factor.
   spreading_factor=7
 
-  # List of Ids of gateways connected with this device (and his clones), Ids have to be separated by commas
+  # List of Ids of gateways connected with this device (and his clones)
+  # Ids have to be separated by commas
   gateways="1"
 
-  # Gateway configuration (this section can be replicated to simulate more gateways with other parameters)
+  # Gateway configuration 
+  # This section can be replicated to simulate more gateways with other parameters
   [[simulator.gateway]]
 
-  # unique id of the gateway to be used in 'gateways' fields under [simulator.device] section
+  # Unique id of the gateway to be used in 'gateways' fields under [simulator.device] section
   group_id="1"
 
-  # number of receiving gateways (the gateway can be cloned with exactly same parameters as many times you specify here)
+  # Number of receiving gateways 
+  # The gateway can be cloned with exactly same parameters as many times you specify here
   count=3
 
   # Event topic template.

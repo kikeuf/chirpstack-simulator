@@ -23,7 +23,14 @@ log_level=4
   # token can be generated using the login API endpoint. In the near-future
   # it will be possible to generate these tokens within the web-interface:
   # https://github.com/brocaar/chirpstack-application-server/pull/421
-  jwt_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcyIsImV4cCI6MTYyMTAzNTgyOSwiaWQiOjEsImlzcyI6ImFzIiwibmJmIjoxNjIwOTQ5NDI5LCJzdWIiOiJ1c2VyIiwidXNlcm5hbWUiOiJhZG1pbiJ9.XESV6wKymPMC7gbsbS0GXJjj4fh2Htp8Aon29lLUy3I"
+  # A token is valid only for 48 hours and need to be refreshed
+  jwt_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcyIsImV4cCI6MTYyMTI5MjY2OSwiaWQiOjEsImlzcyI6ImFzIiwibmJmIjoxNjIxMjA2MjY5LCJzdWIiOiJ1c2VyIiwidXNlcm5hbWUiOiJhZG1pbiJ9.ahOyyadnh2vkGnsDLo9euktFC4Fl_f4G82atvls9YvI"
+
+  # Credentials to use for http requests on chirpstack api
+  # Chirpstack-simulator will try to retrieve the jwt_token by this way to avoid manual refresh
+  # if it doesn't manage the jwt_token specified above will be used instead 
+  username="admin"
+  password="password"
 
   # Server.
   #
@@ -36,7 +43,6 @@ log_level=4
   #
   # Set this to true when the endpoint is not using TLS.
   insecure=true
-
 
   # MQTT integration configuration.
   #
@@ -77,8 +83,16 @@ log_level=4
 #
 # Example:
 [[simulator]]
+
+# # Application ID
 #
-#   # Prefix for this simulation name (facultative)
+# # Set the application ID to use for this simulation
+# # If not specified a new dedicated application will be created
+application_id=129
+
+#
+# # Prefix for this simulation name (facultative)
+# # This parameter will be ignored if application_id is specified
 prefix="simulation1_"
 #
 # # Service-profile ID.
@@ -91,7 +105,7 @@ service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="5m"
+duration="1m"
 #
 # # Activation time.
 # #
@@ -201,7 +215,7 @@ activation_time="5s"
    
 
 # Example:
-[[simulator2]]
+[[simulator]]
 #
 # # Application ID.
 # #
@@ -216,13 +230,13 @@ prefix="simulation2_"
 # #
 # # It is recommended to create a new organization with a new service-profile
 # # in the ChirpStack Application Server.
- service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
+service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 #
 # # Duration.
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="5m"
+duration="1m"
 #
 # # Activation time.
 # #
@@ -231,13 +245,14 @@ duration="5m"
 activation_time="5s"
 #
 #   # Device configuration.
-[simulator2.device2]
+[[simulator.device]]
 #
+   prefix="devicesim2_"
 #   # Number of devices to simulate.
    count=1
 #
 #   # Uplink interval.
-   uplink_interval="1m"
+   uplink_interval="10s"
 #
 #   # FPort.
    f_port=10
@@ -249,13 +264,19 @@ activation_time="5s"
    frequency=868100000
 #
 #   # Bandwidth (Hz).
-   bandwidth=500000
+   bandwidth=125000
 #
 #   # Spreading-factor.
    spreading_factor=7
+
+   gateways="2"
 #
 #   # Gateway configuration.
-[simulator2.gateway2]
+[[simulator.gateway]]
+
+   group_id="2"
+
+   prefix="gatewaysim2_"
 #
    count=1
 #   # Event topic template.

@@ -40,8 +40,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 		
 		wg.Add(1)
 		
-		appID := 0
-
 
 		spID, err := uuid.FromString(c.ServiceProfileID)
 		if err != nil {
@@ -112,7 +110,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 			gateways:	      sgws,
 			duration:             c.Duration,
 			deviceAppKeys:        make(map[lorawan.EUI64]lorawan.AES128Key),
-                        applicationID:        int64(appID),    
+                        applicationID:        c.ApplicationID,  
+			TearApplication:      (c.ApplicationID==0),
 		}
 
 		go sim.start()
@@ -138,6 +137,7 @@ type simulation struct {
 	applicationID        int64
 	gatewayIDs           []lorawan.EUI64
 	deviceAppKeys        map[lorawan.EUI64]lorawan.AES128Key
+	TearApplication	     bool
 }
 
 type simdevice struct {
@@ -162,7 +162,7 @@ type simgateway struct {
 	eventTopicTemplate   string
 	commandTopicTemplate string
 	gatewayIDs           []lorawan.EUI64
-}
+}	
 
 func (s *simulation) start() {
 	if err := s.init(); err != nil {
@@ -469,11 +469,14 @@ func (s *simulation) setupApplication() error {
 func (s *simulation) tearDownApplication() error {
 	log.Info("simulator: tear-down application")
 
-	_, err := as.Application().Delete(context.Background(), &api.DeleteApplicationRequest{
-		Id: s.applicationID,
-	})
-	if err != nil {
-		return errors.Wrap(err, "delete application error")
+	if s.TearApplication {
+
+		_, err := as.Application().Delete(context.Background(), &api.DeleteApplicationRequest{
+			Id: s.applicationID,
+		})
+		if err != nil {
+			return errors.Wrap(err, "delete application error")
+		}
 	}
 	return nil
 }

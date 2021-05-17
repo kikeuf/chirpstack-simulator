@@ -16,6 +16,8 @@ type Config struct {
 	ApplicationServer struct {
 		API struct {
 			JWTToken string `mapstructure:"jwt_token"`
+			User     string `mapstructure:"username"`
+			Password string	`mapstructure:"password"`
 			Server   string `mapstructure:"server"`
 			Insecure bool   `mapstructure:"insecure"`
 		} `mapstructure:"api"`
@@ -42,6 +44,7 @@ type Config struct {
 	} `mapstructure:"network_server"`
 
 	Simulator []struct {
+		ApplicationID    int64         `mapstructure:"application_id"`     		
 		Prefix		 string        `mapstructure:"prefix"`
 		ServiceProfileID string        `mapstructure:"service_profile_id"`
 		Duration         time.Duration `mapstructure:"duration"`

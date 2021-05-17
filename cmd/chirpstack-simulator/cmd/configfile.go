@@ -35,7 +35,14 @@ log_level={{ .General.LogLevel }}
   # token can be generated using the login API endpoint. In the near-future
   # it will be possible to generate these tokens within the web-interface:
   # https://github.com/brocaar/chirpstack-application-server/pull/421
+  # A token is valid only for 48 hours and need to be refreshed
   jwt_token="{{ .ApplicationServer.API.JWTToken }}"
+
+  # Credentials to use for http requests on chirpstack api
+  # Chirpstack-simulator will try to retrieve the jwt_token by this way to avoid manual refresh
+  # if it doesn't manage the jwt_token specified above will be used instead 
+  username="{{ .ApplicationServer.API.User }}"
+  password="{{ .ApplicationServer.API.Password }}"
 
   # Server.
   #
@@ -88,9 +95,16 @@ log_level={{ .General.LogLevel }}
 # Simulator configuration (this section can be replicated)
 # [[simulator]]
 #
-# # Prefix.
-# #
-# # Prefix for this simulation name (facultative)
+# # Application ID (facultative)
+#
+# # Set the application ID to use for this simulation
+# # If not specified a new dedicated application will be created
+# application_id=1
+#
+# Prefix (facultative)
+# 
+# Prefix for this simulation name
+# # This parameter will be ignored if application_id is specified
 # prefix="simulation1_"
 #
 # # Service-profile ID.
@@ -111,13 +125,16 @@ log_level={{ .General.LogLevel }}
 # # value must be less than the simulator duration.
 # activation_time="1m"
 #
-#   # Device configuration (this section can be replicated to simulate more devices with other parameters)
+#
+#   # Device configuration 
+#   # this section can be replicated to simulate more devices with other parameters
 #   [[simulator.device]]
 #
 #   # Prefix for this device name (facultative)
 #   prefix="devicegroup1_"
 #
-#   # Number of devices to simulate (the device can be cloned with exactly same parameters as many times you specify here)
+#   # Number of devices to simulate 
+#   # The device can be cloned with exactly same parameters as many times you specify here
 #   count=1000
 #
 #   # Uplink interval.
@@ -129,7 +146,8 @@ log_level={{ .General.LogLevel }}
 #   # Payload (HEX encoded).
 #   payload="010203"
 #
-#   # StrPayload (String) [used only if 'payload' value is empty or not set otherwise this parameter is ignored]
+#   # StrPayload (String) 
+#   # used only if 'payload' value is empty or not set otherwise this parameter is ignored
 #   strpayload="text"
 #
 #   # Frequency (Hz).
@@ -141,19 +159,24 @@ log_level={{ .General.LogLevel }}
 #   # Spreading-factor.
 #   spreading_factor=7
 #
-#   # Ids of group of gateways connected with all devices of this group, Ids separated by commas
+#   # Ids of group of gateways connected with all devices of this group
+#   # Ids separated by commas
 #   gateways="1,2"
 #
-#   # Gateway configuration (this section can be replicated to simulate more gateways with other parameters)
+#
+#   # Gateway configuration 
+#   # This section can be replicated to simulate more gateways with other parameters
 #   [[simulator.gateway]]
 #
-#   # id of the group of gateways, id to add in 'gateways' fields under [simulator.device] section
+#   # Id of the group of gateways
+#   # Id to add in 'gateways' fields under [simulator.device] section
 #   group_id="1"
 #
 #   # Prefix for this devices group name (facultative)
 #   prefix="gatewaygroup1_"
 #
-#   # number of receiving gateways (the gateway can be cloned with exactly same parameters as many times you specify here)
+#   # Number of receiving gateways 
+#   # The gateway can be cloned with exactly same parameters as many times you specify here
 #   count=3
 #
 #   # Event topic template.
