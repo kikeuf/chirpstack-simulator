@@ -17,6 +17,7 @@ import (
 	"github.com/kikeuf/chirpstack-simulator/internal/config"
 	"github.com/kikeuf/chirpstack-simulator/internal/ns"
 	"github.com/kikeuf/chirpstack-simulator/internal/simulator"
+	"github.com/kikeuf/chirpstack-simulator/internal/listener"
 )
 
 func run(cnd *cobra.Command, args []string) error {
@@ -27,6 +28,7 @@ func run(cnd *cobra.Command, args []string) error {
 		setupASIntegration,
 		setupNSIntegration,
 		setupPrometheus,
+		setupListener,
 		startSimulator,
 	}
 
@@ -100,6 +102,16 @@ func setupPrometheus(ctx context.Context, wg *sync.WaitGroup) error {
 		err := server.ListenAndServe()
 		log.WithError(err).Error("prometheus endpoint server error")
 	}()
+
+	return nil
+}
+
+func setupListener(ctx context.Context, wg *sync.WaitGroup) error {
+	if config.C.Listener.Activate {	
+		if (config.C.Listener.Port==uint64(0)) { config.C.Listener.Port=uint64(8090) }		
+		go listener.Listen(config.C.Listener.Port,config.C.Listener.JSON)	
+		
+	}
 
 	return nil
 }

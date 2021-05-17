@@ -13,6 +13,12 @@ type Config struct {
 		LogLevel int `mapstructure:"log_level"`
 	}
 
+	Listener struct {
+		Activate  bool    `mapstructure:"activate"`
+		Port      uint64  `mapstructure:"port"`
+		JSON      bool    `mapstructure:"json"`
+	}
+
 	ApplicationServer struct {
 		API struct {
 			JWTToken string `mapstructure:"jwt_token"`

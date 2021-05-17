@@ -35,6 +35,19 @@ For generating a configuration template, use the following command:
 # debug=5, info=4, warning=3, error=2, fatal=1, panic=0
 log_level=4
 
+# Listen Http integration
+[listener]
+
+  # Activate listener
+  activate=false
+
+  # Listening port
+  # Add http integration in applications to see the uplink and join messages
+  port = 8090
+
+  #json = false   - to handle Protobuf payloads (binary)
+  #json = true    - to handle JSON payloads (Protobuf JSON mapping)
+  json = true
 
 # Application Server configuration.
 [application_server]
@@ -120,7 +133,7 @@ log_level=4
 #
 # # Set the application ID to use for this simulation
 # # If not specified a new dedicated application will be created
-application_id=PUT_YOUR_APPLICATION_ID_HERE
+application_id=1
 
 # Prefix (facultative)
 # 

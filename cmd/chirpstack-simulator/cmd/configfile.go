@@ -16,6 +16,19 @@ const configTemplate = `[general]
 # debug=5, info=4, warning=3, error=2, fatal=1, panic=0
 log_level={{ .General.LogLevel }}
 
+# Listen Http integration
+[listener]
+
+  # Activate listener
+  activate=true
+
+  # Listening port
+  # Add http integration in applications to see the uplink and join messages
+  port = 8090
+
+  #json = false   - to handle Protobuf payloads (binary)
+  #json = true    - to handle JSON payloads (Protobuf JSON mapping)
+  json = true
 
 # Application Server configuration.
 [application_server]
