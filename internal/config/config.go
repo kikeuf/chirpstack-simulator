@@ -57,16 +57,20 @@ type Config struct {
 		ActivationTime   time.Duration `mapstructure:"activation_time"`
 
 		Device[] struct {
-			Prefix		string	      `mapstructure:"prefix"`	
-			Count           int           `mapstructure:"count"`
-			UplinkInterval  time.Duration `mapstructure:"uplink_interval"`
-			FPort           uint8         `mapstructure:"f_port"`
-			StrPayload      string        `mapstructure:"strpayload"`
-			Payload         string        `mapstructure:"payload"`
-			Frequency       int           `mapstructure:"frequency"`
-			Bandwidth       int           `mapstructure:"bandwidth"`
-			SpreadingFactor int           `mapstructure:"spreading_factor"`
-			Gateways	string        `mapstructure:"gateways"`
+			Prefix			string	      `mapstructure:"prefix"`	
+			Count           	int           `mapstructure:"count"`
+			UplinkInterval  	time.Duration `mapstructure:"uplink_interval"`
+			FPort           	uint8         `mapstructure:"f_port"`
+			StrPayload      	string        `mapstructure:"strpayload"`
+			Payload         	string        `mapstructure:"payload"`
+			DownlinkActivate	bool	      `mapstructure:"downlink_activate"`	
+			DownlinkStrPayload      string        `mapstructure:"downlink_strpayload"`
+			DownlinkPayload         string        `mapstructure:"downlink_payload"`
+			DownlinkInterval  	time.Duration `mapstructure:"downlink_interval"`
+			Frequency       	int           `mapstructure:"frequency"`
+			Bandwidth       	int           `mapstructure:"bandwidth"`
+			SpreadingFactor 	int           `mapstructure:"spreading_factor"`
+			Gateways		string        `mapstructure:"gateways"`
 
 		} `mapstructure:"device"`
 

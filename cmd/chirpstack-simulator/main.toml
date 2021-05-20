@@ -8,7 +8,7 @@ log_level=4
 [listener]
 
   # Activate listener
-  activate=false
+  activate=true
 
   # Listening port
   # Add http integration in applications to see the uplink and join messages
@@ -37,7 +37,8 @@ log_level=4
   # it will be possible to generate these tokens within the web-interface:
   # https://github.com/brocaar/chirpstack-application-server/pull/421
   # A token is valid only for 48 hours and need to be refreshed
-  jwt_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcyIsImV4cCI6MTYyMTI5MjY2OSwiaWQiOjEsImlzcyI6ImFzIiwibmJmIjoxNjIxMjA2MjY5LCJzdWIiOiJ1c2VyIiwidXNlcm5hbWUiOiJhZG1pbiJ9.ahOyyadnh2vkGnsDLo9euktFC4Fl_f4G82atvls9YvI"
+  #jwt_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhcyIsImV4cCI6MTYyMTI5MjY2OSwiaWQiOjEsImlzcyI6ImFzIiwibmJmIjoxNjIxMjA2MjY5LCJzdWIiOiJ1c2VyIiwidXNlcm5hbWUiOiJhZG1pbiJ9.ahOyyadnh2vkGnsDLo9euktFC4Fl_f4G82atvls9YvI"
+  jwt_token="1234"
 
   # Credentials to use for http requests on chirpstack api
   # Chirpstack-simulator will try to retrieve the jwt_token by this way to avoid manual refresh
@@ -118,7 +119,7 @@ service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="1m"
+duration="2m"
 #
 # # Activation time.
 # #
@@ -141,8 +142,17 @@ activation_time="5s"
 #   # FPort.
    f_port=10
 #
-#   # Payload (HEX encoded).
+#   # Uplink Payload (HEX encoded).
    payload="48656c6c6f20776f726c6421"
+
+#   # Downlink activation.
+   downlink_activate=true
+
+#   # Downlink Payload (String).
+   downlink_strpayload="ok"
+
+#   # Downlink interval.
+   downlink_interval="10s"
 #
 #   # Frequency (Hz).
    frequency=868100000
@@ -249,7 +259,7 @@ service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="1m"
+duration="2m"
 #
 # # Activation time.
 # #

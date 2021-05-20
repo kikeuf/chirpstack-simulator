@@ -4,9 +4,9 @@ import (
     "bytes"
     "encoding/hex"
     "io/ioutil"
-    "log"
     "net/http"
     "strconv"
+    log "github.com/sirupsen/logrus"
 
     "github.com/golang/protobuf/jsonpb"
     "github.com/golang/protobuf/proto"
@@ -34,12 +34,19 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     case "join":
         err = h.join(b)
     default:
-        log.Printf("handler for event %s is not implemented", event)
+        //log.Printf("handler for event %s is not implemented", event)
+	log.WithFields(log.Fields{
+		"event": event,
+	}).Warn("handler for event is not implemented")
         return
     }
 
     if err != nil {
-        log.Printf("handling event '%s' returned error: %s", event, err)
+        //log.Printf("handling event '%s' returned error: %s", event, err)
+	log.WithFields(log.Fields{
+		"event": event,
+		"error": err,
+	}).Fatal("handling event returned error")
     }
 }
 
@@ -56,7 +63,8 @@ func decodedData(data []byte) string{
 		return ("")
 	}
 
-	return (sData + " (decoded: '" + iapi.BytesToString(dData) + "')")
+	//return (sData + " (decoded: '" + iapi.BytesToString(dData) + "')")
+	return iapi.BytesToString(dData)
 }
 			
 func (h *handler) up(b []byte) error {
@@ -64,7 +72,12 @@ func (h *handler) up(b []byte) error {
     if err := h.unmarshal(b, &up); err != nil {
         return err
     }
-    log.Printf("Uplink received from %s with payload: %s", hex.EncodeToString(up.DevEui), decodedData(up.Data))
+    //log.Printf("Uplink received from %s with payload: %s", hex.EncodeToString(up.DevEui), decodedData(up.Data))
+    log.WithFields(log.Fields{
+	"from_devEUI": hex.EncodeToString(up.DevEui),
+	"payload": hex.EncodeToString(up.Data),
+	"payload_decoded": decodedData(up.Data),
+    }).Info("uplink data received")
     return nil
 }
 
@@ -73,7 +86,11 @@ func (h *handler) join(b []byte) error {
     if err := h.unmarshal(b, &join); err != nil {
         return err
     }
-    log.Printf("Device %s joined with DevAddr %s", hex.EncodeToString(join.DevEui), hex.EncodeToString(join.DevAddr))
+    //log.Printf("Device %s joined with DevAddr %s", hex.EncodeToString(join.DevEui), hex.EncodeToString(join.DevAddr))
+    log.WithFields(log.Fields{
+	"DevEUI": hex.EncodeToString(join.DevEui),
+	"DevAddr": hex.EncodeToString(join.DevAddr),
+    }).Info("device joined")
     return nil
 }
 

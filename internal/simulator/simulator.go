@@ -25,13 +25,21 @@ import (
 	"github.com/kikeuf/chirpstack-simulator/internal/as"
 	"github.com/kikeuf/chirpstack-simulator/internal/config"
 	"github.com/kikeuf/chirpstack-simulator/internal/ns"
+	"github.com/kikeuf/chirpstack-simulator/internal/iapi"
 	"github.com/kikeuf/chirpstack-simulator/simulator"
 	"github.com/brocaar/lorawan"
 )
 
+var server string
+var apitoken string
+
 // Start starts the simulator.
 func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
-		
+
+
+	server = c.ApplicationServer.API.Server
+	apitoken = iapi.Token //c.ApplicationServer.API.JWTToken
+
 	for i, c := range c.Simulator {
 		log.WithFields(log.Fields{
 			"i": i,
@@ -58,7 +66,19 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 
 			pl, err := hex.DecodeString(cd.Payload)
 			if err != nil {
-				return errors.Wrap(err, "decode payload error")
+				return errors.Wrap(err, "decode uplink payload error")
+			}
+
+			if len(cd.DownlinkPayload)==0 {
+				cd.DownlinkPayload = hex.EncodeToString([]byte(cd.DownlinkStrPayload))
+			}
+
+			var dpl []byte
+			if (len(cd.DownlinkPayload)!=0) {
+				dpl, err = hex.DecodeString(cd.DownlinkPayload)
+				if err != nil {
+					return errors.Wrap(err, "decode downlink payload error")
+				}
 			}
 			
 			var gws []string
@@ -79,7 +99,10 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 				bandwidth:            cd.Bandwidth / 1000,
 				spreadingFactor:      cd.SpreadingFactor,
 				AppKeys:	      make(map[lorawan.EUI64]lorawan.AES128Key),
-				gateways :	      gws,
+				gateways :	      gws,				
+				downlinkActivate:     cd.DownlinkActivate,				
+				downlinkInterval:     cd.DownlinkInterval,
+				downlinkPayload:      dpl,
 				}
 			sdevs = append(sdevs, sdev)
 
@@ -141,17 +164,20 @@ type simulation struct {
 }
 
 type simdevice struct {
-	prefix		string
-	deviceCount     int
-	fPort           uint8
-	payload         []byte
-	strpayload	string
-	uplinkInterval  time.Duration
-	frequency       int
-	bandwidth       int
-	spreadingFactor int
-	AppKeys		map[lorawan.EUI64]lorawan.AES128Key
-	gateways	[]string
+	prefix		   string
+	deviceCount        int
+	fPort              uint8
+	payload            []byte
+	strpayload	   string
+	uplinkInterval     time.Duration
+	frequency          int
+	bandwidth          int
+	spreadingFactor    int
+	AppKeys		   map[lorawan.EUI64]lorawan.AES128Key
+	gateways	   []string
+	downlinkActivate   bool
+	downlinkInterval   time.Duration
+	downlinkPayload    []byte
 
 }
 
@@ -162,7 +188,17 @@ type simgateway struct {
 	eventTopicTemplate   string
 	commandTopicTemplate string
 	gatewayIDs           []lorawan.EUI64
-}	
+}
+
+type DownlinkDevices struct {
+	Active		bool	
+	FPort		uint8
+	Payload		[]byte
+	Confirmed 	bool
+	Interval 	time.Duration
+	devEUI		[]lorawan.EUI64
+}
+	
 
 func (s *simulation) start() {
 	if err := s.init(); err != nil {
@@ -181,6 +217,7 @@ func (s *simulation) start() {
 	s.wg.Done()
 
 	log.Info("simulation: tear-down completed")
+	
 }
 
 func (s *simulation) init() error {
@@ -243,6 +280,7 @@ func (s *simulation) runSimulation() error {
 	var gateways []*simulator.Gateway
 	var devices []*simulator.Device
 	var gateway_groupids []string
+	var downDevices []DownlinkDevices
 
 	//Create all gateways for this simulation
 	for _, g := range s.gateways {	
@@ -262,14 +300,14 @@ func (s *simulation) runSimulation() error {
 	   }	
 	}
 
-	//Wait before performing simulation
+	//Manage cancellation
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(s.ctx)
 	if s.duration != 0 {
 		ctx, cancel = context.WithTimeout(ctx, s.duration)
 	}
 	defer cancel()
-
+	
 	for _, sdev := range s.devices {
 
 		//Create a group of gateways used by all devices of this group
@@ -282,7 +320,9 @@ func (s *simulation) runSimulation() error {
 		   }
 		}
 
-
+		var downDev DownlinkDevices
+		
+		ks := 0
 		for devEUI, appKey := range sdev.AppKeys {
 
 			d, err := simulator.NewDevice(ctx, &wg,
@@ -291,6 +331,7 @@ func (s *simulation) runSimulation() error {
 				simulator.WithUplinkInterval(sdev.uplinkInterval),
 				simulator.WithOTAADelay(time.Duration(mrand.Int63n(int64(s.activationTime)))),
 				simulator.WithUplinkPayload(false, sdev.fPort, sdev.payload),
+				//simulator.WithDownlinkPayload(sdev.downlinkActivate,false,sdev.downlinkInterval,sdev.downlinkPayload),
 				simulator.WithGateways(gws),
 				simulator.WithUplinkTXInfo(gw.UplinkTXInfo{
 					Frequency:  uint32(sdev.frequency),
@@ -310,9 +351,26 @@ func (s *simulation) runSimulation() error {
 
 			devices = append(devices, d)
 
+			if ks==0 {
+				downDev.Active = sdev.downlinkActivate	
+				downDev.FPort = sdev.fPort
+				downDev.Payload = sdev.downlinkPayload
+				downDev.Confirmed = false
+				downDev.Interval = sdev.downlinkInterval
+			}
+			downDev.devEUI = append(downDev.devEUI, devEUI)
+			ks++
+			
 		}
-	}
+		downDevices = append(downDevices, downDev)
 
+	}
+	
+	for k:=0; k<len(downDevices);k++ {
+		var d DownlinkDevices
+		d =  downDevices[k]
+		if d.Active { iapi.SendDownlinkLoop(s.activationTime, s.duration,server,apitoken,d.Interval,d.devEUI,d.FPort,d.Payload,d.Confirmed) }
+	}
 
 	go func() {
 		sigChan := make(chan os.Signal)

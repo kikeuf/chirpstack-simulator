@@ -24,11 +24,11 @@ log_level={{ .General.LogLevel }}
 
   # Listening port
   # Add http integration in applications to see the uplink and join messages
-  port = 8090
+  port=8090
 
-  #json = false   - to handle Protobuf payloads (binary)
-  #json = true    - to handle JSON payloads (Protobuf JSON mapping)
-  json = true
+  #json=false   - to handle Protobuf payloads (binary)
+  #json=true    - to handle JSON payloads (Protobuf JSON mapping)
+  json=true
 
 # Application Server configuration.
 [application_server]
@@ -163,6 +163,19 @@ log_level={{ .General.LogLevel }}
 #   # used only if 'payload' value is empty or not set otherwise this parameter is ignored
 #   strpayload="text"
 #
+#   # Downlink activation.
+#   downlink_activate=true
+#
+#   # Downlink Payload (HEX encoded).
+#   downlink_payload="010203"
+#
+#   # Downlink Payload (String).
+#   # Used only if 'downlink_payload' value is empty or not set otherwise this parameter is ignored
+#   downlink_strpayload="ok"
+#
+#   # Downlink interval.
+#   downlink_interval="2m"
+#
 #   # Frequency (Hz).
 #   frequency=868100000
 #
@@ -211,6 +224,11 @@ activation_time="{{ $element.ActivationTime }}"
   uplink_interval="{{ $element.Device.UplinkInterval }}"
   f_port="{{ $element.Device.FPort }}"
   payload="{{ $element.Device.Payload }}"
+  strpayload="{{ $element.Device.StrPayload }}"
+  downlink_activate="{{ $element.Device.DownlinkActivate }}"
+  downlink_interval="{{ $element.Device.DownlinkInterval }}"
+  downlink_payload="{{ $element.Device.DownlinkPayload }}"
+  downlink_strpayload="{{ $element.Device.DownlinkStrPayload }}" 
   frequency={{ $element.Device.Frequency }}
   bandwidth={{ $element.Device.Bandwidth }}
   spreading_factor={{ $element.Device.SpreadingFactor }}

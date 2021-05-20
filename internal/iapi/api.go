@@ -5,9 +5,12 @@ import (
 	"bytes"
 	"io/ioutil"
    	"net/http"
-	//"strings"
+	"strings"
 	//"fmt"
+	//"github.com/pkg/errors"
 )
+
+var Token string
 
 func BytesToString(data []byte) string {
 	return string(data[:])
@@ -22,7 +25,13 @@ func GetToken(server string, user string, psw string) string {
 	//    "password": "password" \
 	//  }' 'http://localhost:8080/api/internal/login'
 
-	if len(server)==0 { server = "http://localhost:8080" }
+	if (len(server)==0) { 
+		server = "http://localhost:8080" 
+	} else  { 
+		if (strings.ToLower(server[0:4])!="http") { 
+			server = "http://" + server 
+		} 
+	}
 	
 	type Payload struct {
 		Email    string `json:"email"`
@@ -43,6 +52,7 @@ func GetToken(server string, user string, psw string) string {
 	req, err := http.NewRequest("POST", server + "/api/internal/login", body)
 	if err != nil {
 		// handle err
+		//fmt.Println(errors.Wrap(err, "newrequest"))
 		return ""
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -61,6 +71,8 @@ func GetToken(server string, user string, psw string) string {
 		return ""
 	}
 	sbdy:=bdy[8:len(bdy)-2]
-	return BytesToString(sbdy)
+	Token = BytesToString(sbdy)
+
+	return Token
 }
 

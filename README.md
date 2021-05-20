@@ -39,15 +39,15 @@ log_level=4
 [listener]
 
   # Activate listener
-  activate=false
+  activate=true
 
   # Listening port
   # Add http integration in applications to see the uplink and join messages
-  port = 8090
+  port=8090
 
-  #json = false   - to handle Protobuf payloads (binary)
-  #json = true    - to handle JSON payloads (Protobuf JSON mapping)
-  json = true
+  #json=false   - to handle Protobuf payloads (binary)
+  #json=true    - to handle JSON payloads (Protobuf JSON mapping)
+  json=true
 
 # Application Server configuration.
 [application_server]
@@ -168,10 +168,10 @@ activation_time="1m"
 
   # Number of devices to simulate 
   # The device can be cloned with exactly same parameters as many times you specify here
-  count=1000
+  count=12
 
   # Uplink interval.
-  uplink_interval="5m"
+  uplink_interval="1m"
 
   # FPort.
   f_port=10
@@ -182,6 +182,19 @@ activation_time="1m"
   # StrPayload (String) 
   # Used only if 'payload' value is empty or not set otherwise this parameter is ignored
   strpayload="text"
+
+  # Downlink activation.
+  downlink_activate=true
+
+  # Downlink Payload (HEX encoded).
+  downlink_payload="010203"
+
+  # Downlink Payload (String).
+  # Used only if 'downlink_payload' value is empty or not set otherwise this parameter is ignored
+  downlink_strpayload="ok"
+
+  # Downlink interval.
+   downlink_interval="2m"
 
   # Frequency (Hz).
   frequency=868100000

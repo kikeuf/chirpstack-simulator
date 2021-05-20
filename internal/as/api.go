@@ -38,10 +38,12 @@ func (j *jwtCredentials) RequireTransportSecurity() bool {
 func Setup(c config.Config) error {
 	
 	conf := c.ApplicationServer
-
 	token := iapi.GetToken(conf.API.Server,conf.API.User,conf.API.Password)
 	if len(token)!=0 {
+		//c.ApplicationServer.API.JWTToken = token
 		conf.API.JWTToken = token
+	} else {
+		iapi.Token = conf.API.JWTToken
 	}
 
 	// connect gRPC
