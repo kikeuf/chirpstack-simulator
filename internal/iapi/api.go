@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
    	"net/http"
 	"strings"
+	"encoding/hex"
+
 	//"fmt"
 	//"github.com/pkg/errors"
 )
@@ -14,6 +16,19 @@ var Token string
 
 func BytesToString(data []byte) string {
 	return string(data[:])
+}
+
+func DecodedData(data []byte) string{
+	
+	sData := hex.EncodeToString(data)
+			
+	dData, err := hex.DecodeString(sData)
+	if err != nil {
+		return ("")
+	}
+
+	//return (sData + " (decoded: '" + iapi.BytesToString(dData) + "')")
+	return BytesToString(dData)
 }
 
 func GetToken(server string, user string, psw string) string {

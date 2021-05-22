@@ -163,7 +163,7 @@ activation_time="5s"
 #   # Spreading-factor.
    spreading_factor=7
 
-   gateways = "5"
+   gateways = "2"
 
 [[simulator.device]]
 #
@@ -192,7 +192,7 @@ activation_time="5s"
    spreading_factor=7
 
 # Gateways connected to all devices of this group
-   gateways = "1,5"
+   gateways = "1,2"
 #
 #   # Gateway configuration.
 [[simulator.gateway]]
@@ -214,10 +214,10 @@ activation_time="5s"
 
 [[simulator.gateway]]
 #
-   group_id="5"
+   group_id="2"
 
   # Prefix of the device name will be followed by UEID in Chirpstack Application Server
-   prefix="gatewaygroup5_"
+   prefix="gatewaygroup2_"
 
 #   # Number of gateways to simulate.
    count=2
@@ -292,12 +292,12 @@ activation_time="5s"
 #   # Spreading-factor.
    spreading_factor=7
 
-   gateways="2"
+   gateways="5"
 #
 #   # Gateway configuration.
 [[simulator.gateway]]
 
-   group_id="2"
+   group_id="5"
 
    prefix="gatewaysim2_"
 #

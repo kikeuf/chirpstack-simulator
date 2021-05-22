@@ -14,6 +14,8 @@ import (
 
 	"github.com/brocaar/chirpstack-api/go/v3/gw"
 	"github.com/brocaar/lorawan"
+
+	"github.com/kikeuf/chirpstack-simulator/internal/iapi"
 )
 
 // DeviceOption is the interface for a device option.
@@ -103,7 +105,16 @@ type Device struct {
 
 	// OTAA delay.
 	otaaDelay time.Duration
+
+
+	// Parameters for default downlink to send from application (not handled)
+	//downlinkPayload   []byte
+	//downlinkConfirmed bool
+	//downlinkInterval  time.Duration
+	//downlinkActivated bool
+		
 }
+
 
 // WithAppKey sets the AppKey.
 func WithAppKey(appKey lorawan.AES128Key) DeviceOption {
@@ -163,6 +174,19 @@ func WithUplinkPayload(confirmed bool, fPort uint8, pl []byte) DeviceOption {
 		return nil
 	}
 }
+
+
+// WithDownlinkPayload sets the downlink payload.
+//func WithDownlinkPayload(active bool, confirmed bool, interval time.Duration, pl []byte) DeviceOption {
+//	return func(d *Device) error {
+//		d.downlinkActivated = active
+//		d.downlinkInterval = interval
+//		d.downlinkPayload = pl
+//		d.downlinkConfirmed = confirmed
+//		return nil
+//	}
+//}
+
 
 // WithGateways adds the device to the given gateways.
 // Use this function after WithDevEUI!
@@ -490,6 +514,7 @@ func (d *Device) downlinkData(phy lorawan.PHYPayload) error {
 		"dev_eui":   d.devEUI,
 		"f_port":    fPort,
 		"data":      hex.EncodeToString(data),
+		"data_decoded":      iapi.DecodedData(data),
 	}).Info("simulator: device received downlink data")
 
 	if d.downlinkHandlerFunc == nil {

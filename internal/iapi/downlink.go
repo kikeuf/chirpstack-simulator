@@ -13,7 +13,9 @@ import (
 
     "github.com/brocaar/chirpstack-api/go/v3/as/external/api"
     "github.com/brocaar/lorawan"
-	
+
+    //"github.com/kikeuf/chirpstack-simulator/internal/iapi"
+
 )
 
 
@@ -76,6 +78,7 @@ func SendDownlink(server string, apitoken string, devEUI []lorawan.EUI64, fport 
 		log.WithFields(log.Fields{
 		    "confirmed": confirmed,
 		    "data": hex.EncodeToString(data),
+		    "data_decoded": DecodedData(data),
 		    "dev_eui": devEUI[k].String(),
 		    "f_cnt": resp.FCnt,
 		    "fport": fport,

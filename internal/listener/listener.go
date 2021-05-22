@@ -50,22 +50,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-//func BytesToString(data []byte) string {
-//	return string(data[:])
-//}
-
-func decodedData(data []byte) string{
-	
-	sData := hex.EncodeToString(data)
-			
-	dData, err := hex.DecodeString(sData)
-	if err != nil {
-		return ("")
-	}
-
-	//return (sData + " (decoded: '" + iapi.BytesToString(dData) + "')")
-	return iapi.BytesToString(dData)
-}
 			
 func (h *handler) up(b []byte) error {
     var up integration.UplinkEvent
@@ -76,7 +60,7 @@ func (h *handler) up(b []byte) error {
     log.WithFields(log.Fields{
 	"from_devEUI": hex.EncodeToString(up.DevEui),
 	"payload": hex.EncodeToString(up.Data),
-	"payload_decoded": decodedData(up.Data),
+	"payload_decoded": iapi.DecodedData(up.Data),
     }).Info("uplink data received")
     return nil
 }
