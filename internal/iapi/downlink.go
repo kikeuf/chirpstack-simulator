@@ -33,7 +33,7 @@ func (a APIToken) RequireTransportSecurity() bool {
 }
 
 //func SendDownlink(server string, apitoken string, downDevices DownlinkDevices) {
-func SendDownlink(server string, apitoken string, devEUI []lorawan.EUI64, fport uint8, data []byte, confirmed bool) {
+func SendDownlink(server string, apitoken string, devEUI []lorawan.EUI64, prefix string, fport uint8, data []byte, confirmed bool) {
 
 //log.Println("senddownlink")
      if len(server)==0 { server="localhost:8080" } 
@@ -48,7 +48,7 @@ func SendDownlink(server string, apitoken string, devEUI []lorawan.EUI64, fport 
     // connect to the gRPC server
     conn, err := grpc.Dial(server, dialOpts...)
     if err != nil {
-	msg := errors.Wrap(err, "The downlink to devices group has failed")
+	msg := errors.Wrap(err, "simulator: downlink to devices group has failed")
 	//log.Println(msg)
 	log.Warn(msg)
 
@@ -68,27 +68,26 @@ func SendDownlink(server string, apitoken string, devEUI []lorawan.EUI64, fport 
 		},
 	    })
 	    if err != nil {
-		//msg := errors.Wrap(err, "The downlink to device " + devEUI[k].String() + " has failed")
-		//log.Println(msg)
 		log.WithFields(log.Fields{
-		    "dev_eui": devEUI[k].String(),
- 		}).Warn("The downlink has failed")
+		    //"dev_eui": devEUI[k].String(),
+		    "to_device": prefix + devEUI[k].String(),
+ 		}).Warn("simulator: downlink has failed")
 	    } else {
-		//log.Println("The downlink data", hex.EncodeToString(data), "to device", devEUI[k].String(), "on port", fport, "has been enqueued with FCnt:", resp.FCnt)
 		log.WithFields(log.Fields{
 		    "confirmed": confirmed,
 		    "data": hex.EncodeToString(data),
 		    "data_decoded": DecodedData(data),
-		    "dev_eui": devEUI[k].String(),
+		    //"dev_eui": devEUI[k].String(),
+		    "to_device": prefix + devEUI[k].String(),
 		    "f_cnt": resp.FCnt,
-		    "fport": fport,
- 		}).Info("downlink data has been enqueud")
+		    "f_port": fport,
+ 		}).Info("simulator: downlink data has been enqueud")
 	    }
     }
 
 }
 
-func SendDownlinkLoop(waitduration time.Duration, sduration time.Duration, server string, apitoken string, interval time.Duration, devEUI []lorawan.EUI64, fport uint8, data []byte, confirmed bool) {
+func SendDownlinkLoop(waitduration time.Duration, sduration time.Duration, server string, apitoken string, interval time.Duration, devEUI []lorawan.EUI64, prefix string, fport uint8, data []byte, confirmed bool) {
 
 	done := make(chan bool)	
 	go func() {
@@ -106,7 +105,7 @@ func SendDownlinkLoop(waitduration time.Duration, sduration time.Duration, serve
 		//time.Sleep(interval)
 	        select {
 		case <- ticker.C:
-		    SendDownlink(server,apitoken,devEUI, fport,data,confirmed)
+		    SendDownlink(server,apitoken,devEUI, prefix, fport,data,confirmed)
 		case <-done:
 		   ticker.Stop()
 		   return

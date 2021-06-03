@@ -42,7 +42,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 
 	for i, c := range c.Simulator {
 		log.WithFields(log.Fields{
-			"i": i,
+			"i": i+1,
 		}).Info("simulator: starting simulation")
 
 		
@@ -124,6 +124,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 		}
 
 		sim := simulation{
+			num :		      i+1,
 			prefix : 	      c.Prefix,			
 			ctx:                  ctx,
 			wg:                   wg,
@@ -145,6 +146,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 }
 
 type simulation struct {
+	num		 int
 	prefix		 string	
 	ctx              context.Context
 	wg               *sync.WaitGroup
@@ -158,6 +160,7 @@ type simulation struct {
 	serviceProfile       *api.ServiceProfile
 	deviceProfileID      uuid.UUID
 	applicationID        int64
+	applicationName	     string
 	gatewayIDs           []lorawan.EUI64
 	deviceAppKeys        map[lorawan.EUI64]lorawan.AES128Key
 	TearApplication	     bool
@@ -197,6 +200,8 @@ type DownlinkDevices struct {
 	Confirmed 	bool
 	Interval 	time.Duration
 	devEUI		[]lorawan.EUI64
+	//devName	[]string
+	prefix		string
 }
 	
 
@@ -208,7 +213,7 @@ func (s *simulation) start() {
 		log.WithError(err).Error("simulator: simulation error")
 	}
 
-	log.Info("simulator: simulation completed")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: simulation completed")
 
 	if err := s.tearDown(); err != nil {
 		log.WithError(err).Error("simulator: tear-down simulation error")
@@ -216,12 +221,12 @@ func (s *simulation) start() {
 
 	s.wg.Done()
 
-	log.Info("simulation: tear-down completed")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulation: tear-down completed")
 	
 }
 
 func (s *simulation) init() error {
-	log.Info("simulation: setting up")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulation: setting up")
 
 	if err := s.setupServiceProfile(); err != nil {
 		return err
@@ -251,7 +256,7 @@ func (s *simulation) init() error {
 }
 
 func (s *simulation) tearDown() error {
-	log.Info("simulation: cleaning up")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulation: cleaning up")
 
 	if err := s.tearDownApplicationIntegration(); err != nil {
 		return err
@@ -288,6 +293,7 @@ func (s *simulation) runSimulation() error {
 	    for _, gatewayID := range g.gatewayIDs {
 		gw, err := simulator.NewGateway(
 			simulator.WithGatewayID(gatewayID),
+			simulator.WithGatewayName(g.prefix + gatewayID.String()),
 			simulator.WithMQTTClient(ns.Client()),
 			simulator.WithEventTopicTemplate(g.eventTopicTemplate),
 			simulator.WithCommandTopicTemplate(g.commandTopicTemplate),
@@ -327,6 +333,7 @@ func (s *simulation) runSimulation() error {
 
 			d, err := simulator.NewDevice(ctx, &wg,
 				simulator.WithDevEUI(devEUI),
+				simulator.WithDevName(sdev.prefix + devEUI.String()),
 				simulator.WithAppKey(appKey),
 				simulator.WithUplinkInterval(sdev.uplinkInterval),
 				simulator.WithOTAADelay(time.Duration(mrand.Int63n(int64(s.activationTime)))),
@@ -357,6 +364,7 @@ func (s *simulation) runSimulation() error {
 				downDev.Payload = sdev.downlinkPayload
 				downDev.Confirmed = false
 				downDev.Interval = sdev.downlinkInterval
+				downDev.prefix = sdev.prefix
 			}
 			downDev.devEUI = append(downDev.devEUI, devEUI)
 			ks++
@@ -369,7 +377,7 @@ func (s *simulation) runSimulation() error {
 	for k:=0; k<len(downDevices);k++ {
 		var d DownlinkDevices
 		d =  downDevices[k]
-		if d.Active { iapi.SendDownlinkLoop(s.activationTime, s.duration,server,apitoken,d.Interval,d.devEUI,d.FPort,d.Payload,d.Confirmed) }
+		if d.Active { iapi.SendDownlinkLoop(s.activationTime, s.duration,server,apitoken,d.Interval,d.devEUI,d.prefix,d.FPort,d.Payload,d.Confirmed) }
 	}
 
 	go func() {
@@ -391,6 +399,7 @@ func (s *simulation) runSimulation() error {
 
 func (s *simulation) setupServiceProfile() error {
 	log.WithFields(log.Fields{
+		"simulation": s.num,
 		"service_profile_id": s.serviceProfileID,
 	}).Info("simulator: retrieving service-profile")
 	sp, err := as.ServiceProfile().Get(context.Background(), &api.GetServiceProfileRequest{
@@ -405,7 +414,7 @@ func (s *simulation) setupServiceProfile() error {
 }
 
 func (s *simulation) setupGateways() error {
-	log.Info("simulator: creating gateways")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: creating gateways")
 
     for k, g := range s.gateways {
 
@@ -440,7 +449,7 @@ func (s *simulation) setupGateways() error {
 }
 
 func (s *simulation) tearDownGateways() error {
-	log.Info("simulator: tear-down gateways")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: tear-down gateways")
 
 	for _, gatewayID := range s.gatewayIDs {
 		_, err := as.Gateway().Delete(context.Background(), &api.DeleteGatewayRequest{
@@ -455,7 +464,7 @@ func (s *simulation) tearDownGateways() error {
 }
 
 func (s *simulation) setupDeviceProfile() error {
-	log.Info("simulator: creating device-profile")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: creating device-profile")
 
 	dpName, _ := uuid.NewV4()
 
@@ -483,7 +492,7 @@ func (s *simulation) setupDeviceProfile() error {
 }
 
 func (s *simulation) tearDownDeviceProfile() error {
-	log.Info("simulator: tear-down device-profile")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: tear-down device-profile")
 
 	_, err := as.DeviceProfile().Delete(context.Background(), &api.DeleteDeviceProfileRequest{
 		Id: s.deviceProfileID.String(),
@@ -496,7 +505,7 @@ func (s *simulation) tearDownDeviceProfile() error {
 }
 
 func (s *simulation) setupApplication() error {
-	log.Info("simulator: init application")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: init application")
 
 	if s.applicationID == 0 {
 		
@@ -517,7 +526,7 @@ func (s *simulation) setupApplication() error {
 		if err != nil {
 			return errors.Wrap(err, "create application error")
 		}
-
+		s.applicationName = s.prefix + appName.String()
 		s.applicationID = createAppResp.Id
 	}
 	return nil
@@ -525,7 +534,7 @@ func (s *simulation) setupApplication() error {
 
 
 func (s *simulation) tearDownApplication() error {
-	log.Info("simulator: tear-down application")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: tear-down application")
 
 	if s.TearApplication {
 
@@ -541,14 +550,14 @@ func (s *simulation) tearDownApplication() error {
 
 /*
 func (s *simulation) setupDevicesGroup() error {
-	log.Info("simulator: init devices group")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: init devices group")
 
 	
 }
 */
 
 func (s *simulation) setupDevices() error {
-	log.Info("simulator: init devices")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: init devices")
 
     for _, d := range s.devices {
 
@@ -598,7 +607,7 @@ func (s *simulation) setupDevices() error {
 }
 
 func (s *simulation) tearDownDevices() error {
-	log.Info("simulator: tear-down devices")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: tear-down devices")
 
 	for k := range s.deviceAppKeys {
 		_, err := as.Device().Delete(context.Background(), &api.DeleteDeviceRequest{
@@ -613,7 +622,7 @@ func (s *simulation) tearDownDevices() error {
 }
 
 func (s *simulation) setupApplicationIntegration() error {
-	log.Info("simulator: setting up application integration")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: setting up application integration")
 
 	token := as.MQTTClient().Subscribe(fmt.Sprintf("application/%d/device/+/rx", s.applicationID), 0, func(client mqtt.Client, msg mqtt.Message) {
 		applicationUplinkCounter().Inc()
@@ -627,7 +636,7 @@ func (s *simulation) setupApplicationIntegration() error {
 }
 
 func (s *simulation) tearDownApplicationIntegration() error {
-	log.Info("simulator: tear-down application integration")
+	log.WithFields(log.Fields{"simulation": s.num, }).Info("simulator: tear-down application integration")
 
 	token := as.MQTTClient().Unsubscribe(fmt.Sprintf("application/%d/device/+/rx", s.applicationID))
 	token.Wait()

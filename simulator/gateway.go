@@ -26,6 +26,7 @@ type GatewayOption func(*Gateway) error
 type Gateway struct {
 	mqtt      mqtt.Client
 	gatewayID lorawan.EUI64
+	Name string
 
 	deviceMux sync.RWMutex
 	devices   map[lorawan.EUI64]chan gw.DownlinkFrame
@@ -128,6 +129,14 @@ func WithGatewayID(gatewayID lorawan.EUI64) GatewayOption {
 	}
 }
 
+// WithGatewayName sets the gateway name.
+func WithGatewayName(gatewayName string) GatewayOption {
+	return func(g *Gateway) error {
+		g.Name = gatewayName
+		return nil
+	}
+}
+
 // WithDownlinkTxNackRate sets the rate in which Tx NAck messages are sent.
 // Setting this to:
 //   0: always ACK
@@ -193,14 +202,18 @@ func NewGateway(opts ...GatewayOption) (*Gateway, error) {
 
 	downlinkTopic := gw.getCommandTopic("down")
 
+	if (gw.Name=="") { gw.Name = gw.gatewayID.String() }
+
 	log.WithFields(log.Fields{
-		"gateway_id": gw.gatewayID,
+		//"gateway_id": gw.gatewayID,
+		"gateway": gw.Name,
 		"topic":      downlinkTopic,
 	}).Info("simulator: subscribing to gateway mqtt topic")
 	for {
 		if token := gw.mqtt.Subscribe(downlinkTopic, 0, gw.downlinkEventHandler); token.Wait() && token.Error() != nil {
 			log.WithError(token.Error()).WithFields(log.Fields{
-				"gateway_id": gw.gatewayID,
+				//"gateway_id": gw.gatewayID,
+				"gateway": gw.Name,
 				"topic":      downlinkTopic,
 			}).Error("simulator: subscribe to mqtt topic error")
 			time.Sleep(time.Second * 2)
@@ -234,8 +247,11 @@ func (g *Gateway) SendUplinkFrame(pl gw.UplinkFrame) error {
 
 	uplinkTopic := g.getEventTopic("up")
 
+	if (g.Name=="") { g.Name = g.gatewayID.String() }
+
 	log.WithFields(log.Fields{
-		"gateway_id": g.gatewayID,
+		//"gateway_id": g.gatewayID,
+		"gateway": g.Name,
 		"topic":      uplinkTopic,
 	}).Debug("simulator: publish uplink frame")
 
@@ -257,8 +273,11 @@ func (g *Gateway) sendDownlinkTxAck(pl gw.DownlinkTXAck) error {
 
 	ackTopic := g.getEventTopic("ack")
 
+	if (g.Name=="") { g.Name = g.gatewayID.String() }
+
 	log.WithFields(log.Fields{
-		"gateway_id": g.gatewayID,
+		//"gateway_id": g.gatewayID,
+		"gateway": g.Name,
 		"topic":      ackTopic,
 		"error":      pl.Error,
 	}).Debug("simulator: publish downlink tx ack")
@@ -273,13 +292,18 @@ func (g *Gateway) sendDownlinkTxAck(pl gw.DownlinkTXAck) error {
 // addDevice adds the given device to the 'coverage' of the gateway.
 // This means that any downlink sent to the gateway will be forwarded to added
 // devices (which will each validate the DevAddr and MIC).
-func (g *Gateway) addDevice(devEUI lorawan.EUI64, c chan gw.DownlinkFrame) {
+func (g *Gateway) addDevice(devEUI lorawan.EUI64, devName string, c chan gw.DownlinkFrame) {
 	g.deviceMux.Lock()
 	defer g.deviceMux.Unlock()
 
+	if (devName=="") { devName = devEUI.String() }
+	if (g.Name=="") { g.Name = g.gatewayID.String() }
+
 	log.WithFields(log.Fields{
-		"dev_eui":    devEUI,
-		"gateway_id": g.gatewayID,
+		//"dev_eui":    devEUI,
+		"device":  devName,
+		//"gateway_id": g.gatewayID,
+		"gateway": g.Name,
 	}).Info("simulator: add device to gateway")
 
 	g.devices[devEUI] = c

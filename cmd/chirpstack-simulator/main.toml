@@ -102,7 +102,7 @@ log_level=4
 #
 # # Set the application ID to use for this simulation
 # # If not specified a new dedicated application will be created
-application_id=129
+application_id=246
 
 #
 # # Prefix for this simulation name (facultative)
@@ -119,7 +119,7 @@ service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="2m"
+duration="10m"
 #
 # # Activation time.
 # #
@@ -171,7 +171,7 @@ activation_time="5s"
    prefix="devicegroup2_"
 
 #   # Number of devices to simulate.
-   count=1
+   count=10
 #
 #   # Uplink interval.
    uplink_interval="10s"
@@ -259,7 +259,7 @@ service_profile_id="db070986-abbb-4ceb-9663-1e9991dd4f28"
 # #
 # # This defines the duration of the simulation. If set to '0s', the simulation
 # # will run until terminated. This includes the activation time.
-duration="2m"
+duration="5m"
 #
 # # Activation time.
 # #
@@ -280,8 +280,8 @@ activation_time="5s"
 #   # FPort.
    f_port=10
 #
-#   # Payload (HEX encoded).
-   payload="4848484848"
+#   # Payload (String) [used only if 'payload' value is empty or not set otherwise it is ignored]
+   strpayload="Temperature"
 #
 #   # Frequency (Hz).
    frequency=868100000

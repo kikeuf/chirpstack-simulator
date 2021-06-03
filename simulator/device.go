@@ -44,6 +44,9 @@ type Device struct {
 	// DevEUI.
 	devEUI lorawan.EUI64
 
+	//Name
+	Name string
+
 	// JoinEUI.
 	joinEUI lorawan.EUI64
 
@@ -132,6 +135,14 @@ func WithDevEUI(devEUI lorawan.EUI64) DeviceOption {
 	}
 }
 
+// WithDevName sets the Name.
+func WithDevName(Name string) DeviceOption {
+	return func(d *Device) error {
+		d.Name = Name
+		return nil
+	}
+}
+
 // WithJoinEUI sets the JoinEUI.
 func WithJoinEUI(joinEUI lorawan.EUI64) DeviceOption {
 	return func(d *Device) error {
@@ -195,7 +206,7 @@ func WithGateways(gws []*Gateway) DeviceOption {
 		d.gateways = gws
 
 		for i := range d.gateways {
-			d.gateways[i].addDevice(d.devEUI, d.downlinkFrames)
+			d.gateways[i].addDevice(d.devEUI, d.Name, d.downlinkFrames)
 		}
 		return nil
 	}
@@ -245,7 +256,8 @@ func NewDevice(ctx context.Context, wg *sync.WaitGroup, opts ...DeviceOption) (*
 	}
 
 	log.WithFields(log.Fields{
-		"dev_eui": d.devEUI,
+		//"dev_eui": d.devEUI,
+		"device_name": d.Name, 
 	}).Info("simulator: new otaa device")
 
 	wg.Add(2)
@@ -334,7 +346,8 @@ func (d *Device) downlinkLoop() {
 // joinRequest sends the join-request.
 func (d *Device) joinRequest() {
 	log.WithFields(log.Fields{
-		"dev_eui": d.devEUI,
+		//"dev_eui": d.devEUI,
+		"device_name": d.Name, 
 	}).Debug("simulator: send OTAA request")
 
 	phy := lorawan.PHYPayload{
@@ -362,7 +375,8 @@ func (d *Device) joinRequest() {
 // dataUp sends an data uplink.
 func (d *Device) dataUp() {
 	log.WithFields(log.Fields{
-		"dev_eui":   d.devEUI,
+		//"dev_eui":   d.devEUI,
+		"device_name": d.Name, 
 		"dev_addr":  d.devAddr,
 		"confirmed": d.confirmed,
 	}).Debug("simulator: send uplink data")
@@ -421,13 +435,15 @@ func (d *Device) joinAccept(phy lorawan.PHYPayload) error {
 	ok, err := phy.ValidateDownlinkJoinMIC(lorawan.JoinRequestType, d.joinEUI, d.devNonce, d.appKey)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"dev_eui": d.devEUI,
+			//"dev_eui": d.devEUI,
+			"device_name": d.Name, 
 		}).Debug("simulator: invalid join-accept MIC")
 		return nil
 	}
 	if !ok {
 		log.WithFields(log.Fields{
-			"dev_eui": d.devEUI,
+			//"dev_eui": d.devEUI,
+			"device_name": d.Name, 
 		}).Debug("simulator: invalid join-accept MIC")
 		return nil
 	}
@@ -450,7 +466,8 @@ func (d *Device) joinAccept(phy lorawan.PHYPayload) error {
 	d.devAddr = jaPL.DevAddr
 
 	log.WithFields(log.Fields{
-		"dev_eui":  d.devEUI,
+		//"dev_eui":  d.devEUI,
+		"device_name": d.Name, 
 		"dev_addr": d.devAddr,
 	}).Info("simulator: device OTAA activated")
 
@@ -465,14 +482,16 @@ func (d *Device) downlinkData(phy lorawan.PHYPayload) error {
 	ok, err := phy.ValidateDownlinkDataMIC(lorawan.LoRaWAN1_0, 0, d.nwkSKey)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"dev_eui": d.devEUI,
+			//"dev_eui": d.devEUI,
+			"device_name": d.Name, 
 		}).Debug("simulator: invalid downlink data MIC")
 		return nil
 	}
 
 	if !ok {
 		log.WithFields(log.Fields{
-			"dev_eui": d.devEUI,
+			//"dev_eui": d.devEUI,
+			"device_name": d.Name, 
 		}).Debug("simulator: invalid downlink data MIC")
 		return nil
 	}
@@ -511,7 +530,8 @@ func (d *Device) downlinkData(phy lorawan.PHYPayload) error {
 		"confirmed": phy.MHDR.MType == lorawan.ConfirmedDataDown,
 		"ack":       macPL.FHDR.FCtrl.ACK,
 		"f_cnt":     d.fCntDown,
-		"dev_eui":   d.devEUI,
+		//"dev_eui":   d.devEUI,
+		"device_name": d.Name, 
 		"f_port":    fPort,
 		"data":      hex.EncodeToString(data),
 		"data_decoded":      iapi.DecodedData(data),
@@ -539,7 +559,8 @@ func (d *Device) sendUplink(phy lorawan.PHYPayload) error {
 	for i := range d.gateways {
 		if err := d.gateways[i].SendUplinkFrame(pl); err != nil {
 			log.WithError(err).WithFields(log.Fields{
-				"dev_eui": d.devEUI,
+				//"dev_eui": d.devEUI,
+				"device_name": d.Name, 
 			}).Error("simulator: send uplink frame error")
 		}
 	}
